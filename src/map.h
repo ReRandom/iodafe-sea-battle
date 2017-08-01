@@ -1,9 +1,11 @@
 /* map.h - тут хранится информация о карте */
 
+#ifndef MAP_H_
+#define MAP_H
 /* TODO: Можно снизить лишний расход памяти тем, что мы не храним положение
  * корабля в двумерном массиве. */
 
-enum cell {NOTHING, SHIP};
+enum message {NOTHING, HIT, DROW};
 
 struct ship{
     /* максимальная размер корабля - 4 клетки
@@ -35,3 +37,5 @@ struct map{
     /* наши корабли. Мы знаем где они стоят и их состояние */
     struct ship my_ships[10];
 };
+
+#endif
