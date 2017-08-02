@@ -14,6 +14,7 @@
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>
 #include "map.h"
 /* ncurses не хочет работать с Unicode - символами, приходится извращаться */
 
@@ -25,11 +26,13 @@ static struct map gmap;
 void curses_init();
 void curses_end();
 
-void fire(int x, int y);
+void fire(int, int);
 void user_init();
-void upd_user_field(int x, int y, int status);
-void upd_enemy_field(int x, int y, int status);
+void upd_user_field(int, int, int);
+void upd_enemy_field(int, int, int);
 void upd_maps();
 
+void pturninfo(int status);
 void put_ships();
+int findship(int, int);
 #endif

@@ -4,14 +4,38 @@
 int main(int argc, char *argv[])
 {
     /* создаем новое подключение */
-    
+
     struct addrinfo hints, *p, *servinfo; /* информация о соединении */
     int    status;  /* проверим, смогли ли мы установить соединение */
-    int sockfd;
+    int    sockfd;
     char   *ipaddr; /* IP - адрес */
     char   *port;   /* порт */
-    char s[INET6_ADDRSTRLEN];
+    char   s[INET6_ADDRSTRLEN];
     /* getopt - распарсить аргументы */
+
+
+    int opt;
+    if (argc < 5) {
+            fprintf(stderr, "Usage: %s [-i ipaddress] [-n portname]\n",
+                   argv[0]);
+            exit(EXIT_FAILURE);
+    }
+    printf("%d\n", argc);
+    while ((opt = getopt(argc, argv, "i:p:")) != -1) {
+       switch (opt) {
+           case 'i':
+               ipaddr = optarg;
+               break;
+           case 'p':
+               port = optarg;
+           break;
+           default:
+               fprintf(stderr, "Usage: %s [-i ipaddress] [-n portname]\n",
+                       argv[0]);
+               exit(EXIT_FAILURE);
+       }
+    }
+
     memset(&hints, 0, sizeof(hints));
 
     hints.ai_family = AF_UNSPEC;
@@ -73,8 +97,10 @@ int main(int argc, char *argv[])
 void fire(int x, int y)
 {
 
+    /*
     if (gmap.en_field[x][y] != NOTHING)
         shoot_again();
+    */
     /*
      * send...
      */
@@ -148,4 +174,10 @@ void upd_maps()
 void curses_end()
 {
     endwin();
+}
+
+void put_ships(){}
+int findship(int x, int y)
+{
+    return 0;
 }

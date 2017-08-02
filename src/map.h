@@ -39,4 +39,9 @@ struct map{
     char alive;
 };
 
+/* координаты ячейки. Их удобнее передавать сразу, а потом разбивать на отдельные x и y */
+struct coordinates {
+    int x;
+    int y;
+};
 #endif
