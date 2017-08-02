@@ -5,6 +5,15 @@
 #include <wctype.h>
 #include <wchar.h>
 #include <ncurses.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <string.h>
+#include <netdb.h>
+#include <sys/types.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 #include "map.h"
 /* ncurses не хочет работать с Unicode - символами, приходится извращаться */
 
@@ -20,5 +29,7 @@ void fire(int x, int y);
 void user_init();
 void upd_user_field(int x, int y, int status);
 void upd_enemy_field(int x, int y, int status);
+void upd_maps();
 
+void put_ships();
 #endif

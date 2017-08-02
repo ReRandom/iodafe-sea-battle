@@ -36,6 +36,7 @@ struct map{
     char en_field[10][10];
     /* наши корабли. Мы знаем где они стоят и их состояние */
     struct ship my_ships[10];
+    char alive;
 };
 
 #endif
