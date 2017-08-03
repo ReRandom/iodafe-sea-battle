@@ -5,6 +5,7 @@ int main(int argc, char *argv[])
 {
     /* создаем новое подключение */
 
+#if 0
     struct addrinfo hints, *p, *servinfo; /* информация о соединении */
     int    status;  /* проверим, смогли ли мы установить соединение */
     int    sockfd;
@@ -15,12 +16,14 @@ int main(int argc, char *argv[])
 
 
     int opt;
-    if (argc < 5) {
-            fprintf(stderr, "Usage: %s [-i ipaddress] [-n portname]\n",
+
+    /* То ли количество аргументов командной строки? */
+    if (argc < ARGS_NUM) {
+            fprintf(stderr, "Usage: %s [-i ipaddress] [-p portname]\n",
                    argv[0]);
             exit(EXIT_FAILURE);
     }
-    printf("%d\n", argc);
+    /* надо выцепить ip-адрес и порт сервера */
     while ((opt = getopt(argc, argv, "i:p:")) != -1) {
        switch (opt) {
            case 'i':
@@ -29,8 +32,8 @@ int main(int argc, char *argv[])
            case 'p':
                port = optarg;
            break;
-           default:
-               fprintf(stderr, "Usage: %s [-i ipaddress] [-n portname]\n",
+           default: /* ??? */
+               fprintf(stderr, "Usage: %s [-i ipaddress] [-p portname]\n",
                        argv[0]);
                exit(EXIT_FAILURE);
        }
@@ -39,7 +42,7 @@ int main(int argc, char *argv[])
     memset(&hints, 0, sizeof(hints));
 
     hints.ai_family = AF_UNSPEC;
-    /* сообщение нельзя терять */
+    /* сообщение нельзя  потерять */
     hints.ai_socktype = SOCK_STREAM;
     if ((status = getaddrinfo(ipaddr, port, &hints, &servinfo)) != 0) {
         fprintf(stderr, "client, getaddinfo: %s\n", gai_strerror(status));
@@ -48,12 +51,12 @@ int main(int argc, char *argv[])
 
     /* подключаемся к первому возможному */
     for (p = servinfo; p != NULL; p = p->ai_next) {
-        if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) != -1) {
+        if ((sockfd = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
             perror("client, socket");
             continue;
         }
 
-        if (connect(sockfd, p->ai_addr, p->ai_addrlen) != -1) {
+        if (connect(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
             close(sockfd);
             perror("client, connect");
             continue;
@@ -62,7 +65,7 @@ int main(int argc, char *argv[])
     }
 
     /* если  p == NULL, то мы ни к чему не подключились */
-    if (p != NULL) {
+    if (p == NULL) {
         fprintf(stderr, "client: не могу подсоединиться\n");
         return 2;
     }
@@ -72,38 +75,37 @@ int main(int argc, char *argv[])
     freeaddrinfo(servinfo);
     /* готов к recv и sendto */
 
+#endif
     curses_init();
     user_init();
+    refresh();
     /* создадим новый флот*/
     put_ships();
-
-
-    while (gmap.alive) {
+    /* send ("готов")
+     * recv ("другой игрок готов");
+     * */
         /*
-         * могу ли сходить
-         * сходить
-         * обновить информацию
-         * следующий шаг
-         */
+    while (gmap.alive) {
+
+         * recv ("твой ход") или recv("ход противника")
+         * scanf(%c %d, &x, &y);
+         * ynum = pos_by_num(x);
+         * send(x,y)
+         * recv(status)
+         * upd_enemy_field();
+         * redraw();
+         * send(ход закончил)
 
     }
-    refresh();
-
+         */
+/*
     close(sockfd);
+*/
+    mvwprintw(stdscr, MSGPOS, 0, "Конец игры");
+    refresh();
+    getch();
     curses_end();
     return 0;
-}
-
-void fire(int x, int y)
-{
-
-    /*
-    if (gmap.en_field[x][y] != NOTHING)
-        shoot_again();
-    */
-    /*
-     * send...
-     */
 }
 
 /* обновляем данные игрока, когда стреляют по нему */
@@ -121,21 +123,40 @@ void upd_user_field(int x, int y, int status)
             gmap.alive--;
             break;
     }
-    pturninfo(status);
+    penemyinfo(status);
 }
 
-/* напечатать информацию о ходе */
-void pturninfo(int status)
+/* дублирую, но пофиг */
+void penemyinfo(int status)
 {
     switch (status) {
-        case NOTHING:
-            printf("Мимо");
+        case MISS:
+            mvwprintw(stdscr, MSGPOS, 0, "Противкник промазал");
             break;
         case HIT:
-            printf("Ранил");
+            mvwprintw(stdscr, MSGPOS, 0, "Противник повредил корабль");
             break;
         case DROW:
-            printf("Потопил");
+            mvwprintw(stdscr, MSGPOS, 0, "Противник потопил корабль");
+            break;
+    }
+}
+
+/* напечатать информацию */
+void pinfo(int status)
+{
+    switch (status) {
+        case MISS:
+            mvwprintw(stdscr, MSGPOS, 0, "Мимо");
+            break;
+        case HIT:
+            mvwprintw(stdscr, MSGPOS, 0, "Ранил");
+            break;
+        case DROW:
+            mvwprintw(stdscr, MSGPOS, 0, "Потопил");
+            break;
+        case ERROR_PUT:
+            mvwprintw(stdscr, MSGPOS, 0, "Не могу поставить корабль");
             break;
     }
 }
@@ -144,7 +165,7 @@ void pturninfo(int status)
 void upd_enemy_field(int x, int y, int status)
 {
     gmap.en_field[x][y] = status;
-    pturninfo(status);
+    pinfo(status);
 }
 
 void user_init()
@@ -155,29 +176,163 @@ void user_init()
 /* инициализация ncurses */
 void curses_init()
 {
-    initscr();
     setlocale(LC_ALL, "");
+    initscr();
     raw();
     keypad(stdscr, TRUE);
-    noecho();
 }
 
 /* обновить карты игрока и противника */
-void upd_maps()
-{
-    int i = 0;
-    for (i = 0; i < 10; i++) {
-        /* отрисовка */
+void upd_maps() {}
 
-    }
-}
 void curses_end()
 {
     endwin();
 }
 
-void put_ships(){}
+/* есть ли символ в наборе */
+int inset(char x)
+{
+    int i;
+    for (i = 0; i < MAPSIZE; i++)
+        if(hbar[i] == x)
+            return 1;
+    return 0;
+}
+
+/* определить место в массиве */
+int getx(char x)
+{
+    int i;
+    for (i = 0; i < MAPSIZE; i++)
+        if(hbar[i] == x)
+            return i;
+    return -1;
+}
+
+/* проверяю, могу ли поставить корабль на эту позицию */
+int canput(int x, int y, int j)
+{
+
+    /*
+     *     # - часть корабля
+     *     @ - куда могу поставить часть
+     *
+     *     Для начала надо проверить, нет ли корабля на этой клетке
+     *
+     *
+     *     @
+     *    @#@   - так мы можем поставить новую "палубу"
+     *     @
+     *
+     *     Игрок может попытаться поставить другую часть в отдалении
+     *     от основной части корабля:
+     *
+     *     @
+     *
+     *
+     *     ##
+     *
+     *     делаем проверку этого условия и в случае успеха
+     *     cross = 1
+     *
+     *     Может получиться так, что игрок будет создавать корабль
+     *     как-то так:
+     *
+     *    @ @
+     *     #
+     *    @#@
+     *
+     *     Для этого делаем последнюю проверку
+     */
+    if (gmap.my_field[x][y] == SHIP)
+        return 0;
+    if (!((x > 0 && gmap.my_field[x - 1][y] == SHIP) ||
+       (y > 0 && gmap.my_field[x][y - 1] == SHIP) ||
+       (x < MAPSIZE - 1 && gmap.my_field[x + 1][y] == SHIP) ||
+       (y < MAPSIZE - 1 && gmap.my_field[x][y + 1] == SHIP)) && j !=0)
+             return 0;
+    if ((x > 0 && y > 0 &&gmap.my_field[x - 1][y - 1] == SHIP) ||
+        (x<MAPSIZE-1 && y<MAPSIZE-1 && gmap.my_field[x+1][y+1] == SHIP) ||
+        (x < MAPSIZE-1 && y >0 && gmap.my_field[x+ 1][y - 1] == SHIP) ||
+        (x > 0 && y < MAPSIZE-1 &&gmap.my_field[x - 1][y + 1] == SHIP))
+        return 0;
+    return 1;
+}
+
+
+/* расставляем корабли*/
+void put_ships()
+{
+    int i, j, k;
+    char xchar;
+    char *data;
+    int x;
+    int y;
+    int ships = 1;
+    int size = 4;
+    int offset = 0;
+    int yes = 0;
+    int tmp;
+    char str[STRLEN];
+    /* всего нужно поставить SHIPSNUM кораблей */
+    for (i = 0; i < SHIPSNUM; ) {
+        for (j = 0; j < ships;) { /* каждого корабля - ships штук*/
+            yes= 0;
+            wmove(stdscr, MSGPOS + 2,0);
+            wclrtoeol(stdscr);
+            mvwprintw(stdscr, MSGPOS  +1, 0, "Введите координаты ");
+            refresh();
+            mvwgetstr(stdscr, MSGPOS +2, 0, str);
+            offset = 0;
+            data = str;
+            /* у каждого корабля size частей */
+            for (k = 0; k < size; k++) {
+                if ((tmp = sscanf(data,"%c%d%n",&xchar,&y,&offset))== 2) {
+                    data += offset;
+                    y--;
+                    if (inset(xchar) && y >= 0 && y < 10) {
+                        x = getx(xchar);
+                        if(canput(x,y,j)){
+                            gmap.my_field[x][y] = SHIP;
+                            gmap.my_ships[i].position[x][y] = SHIP;
+                            wclear(stdscr);
+                            yes = 1;
+                            i++;
+                        } else {
+                            /* ошибка*/
+                            pinfo(ERROR_PUT);
+                            yes = 0;
+                            break;
+                        }
+                    } else {
+                        /* ошибка*/
+                        pinfo(ERROR_PUT);
+                        yes = 0;
+                        break;
+                    }
+                } else {
+                    /* ошибка*/
+                    pinfo(ERROR_PUT);
+                    yes = 0;
+                    break;
+                }
+            }
+            if(yes)
+                j++;
+        }
+        ships++;
+        size--;
+    }
+
+}
+
+/* найти корабля по координатам */
 int findship(int x, int y)
 {
-    return 0;
+    int i;
+    for (i = 0; i < SHIPSNUM; i++ )
+        if (gmap.my_ships[i].position[x][y] == SHIP)
+            return i;
+    return -1;
 }
