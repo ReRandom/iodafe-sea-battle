@@ -5,7 +5,6 @@ int main(int argc, char *argv[])
 {
     /* создаем новое подключение */
 
-#if 0
     struct addrinfo hints, *p, *servinfo; /* информация о соединении */
     int    status;  /* проверим, смогли ли мы установить соединение */
     int    sockfd;
@@ -75,7 +74,7 @@ int main(int argc, char *argv[])
     freeaddrinfo(servinfo);
     /* готов к recv и sendto */
 
-#endif
+#if 0
     curses_init();
     user_init();
     refresh();
@@ -83,8 +82,7 @@ int main(int argc, char *argv[])
     put_ships();
     /* send ("готов")
      * recv ("другой игрок готов");
-     * */
-        /*
+     */
     while (gmap.alive) {
 
          * recv ("твой ход") или recv("ход противника")
@@ -97,14 +95,12 @@ int main(int argc, char *argv[])
          * send(ход закончил)
 
     }
-         */
-/*
-    close(sockfd);
-*/
     mvwprintw(stdscr, MSGPOS, 0, "Конец игры");
     refresh();
     getch();
     curses_end();
+#endif
+    close(sockfd);
     return 0;
 }
 
@@ -270,11 +266,12 @@ void put_ships()
     int x;
     int y;
     int ships = 1;
-    int size = 4;
+    int size = MAXSHIPSIZE;
     int offset = 0;
     int yes = 0;
     int tmp;
     char str[STRLEN];
+    struct cell input[MAXSHIPSIZE];
     /* всего нужно поставить SHIPSNUM кораблей */
     for (i = 0; i < SHIPSNUM; ) {
         for (j = 0; j < ships;) { /* каждого корабля - ships штук*/
@@ -294,8 +291,8 @@ void put_ships()
                     if (inset(xchar) && y >= 0 && y < 10) {
                         x = getx(xchar);
                         if(canput(x,y,j)){
-                            gmap.my_field[x][y] = SHIP;
-                            gmap.my_ships[i].position[x][y] = SHIP;
+                            input[k].x = x;
+                            input[k].y = y;
                             wclear(stdscr);
                             yes = 1;
                             i++;
@@ -318,8 +315,13 @@ void put_ships()
                     break;
                 }
             }
-            if(yes)
+            if(yes) {
+                for (k = 0; k < size; j++){
+                    gmap.my_field[input[k].x][input[k].y] = SHIP;
+                    gmap.my_ships[i].position[input[k].x][input[k].y] = SHIP;
+                }
                 j++;
+            }
         }
         ships++;
         size--;

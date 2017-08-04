@@ -5,6 +5,7 @@
 
 #define SHIPSNUM 10
 #define MAPSIZE 10
+#define MAXSHIPSIZE 4
 /* TODO: Можно снизить лишний расход памяти тем, что мы не храним положение
  * корабля в двумерном массиве. */
 

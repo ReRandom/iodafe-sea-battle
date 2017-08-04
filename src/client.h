@@ -30,6 +30,10 @@ const char hbar[] = "абвгдежзкик";
 */
 
 const char hbar[] = "abcdefghklm"; /* горизонтальный ряд */
+struct cell{
+    int x;
+    int y;
+};
 
 static struct map gmap;
 void curses_init();
@@ -42,6 +46,7 @@ void upd_enemy_field(int, int, int);
 void upd_maps();
 
 void pinfo(int status);
+void penemyinfo(int status);
 void put_ships();
 int findship(int, int);
 int inset(char x);
