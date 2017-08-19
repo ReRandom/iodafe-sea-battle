@@ -26,14 +26,10 @@
 const wchar_t dot[] = {0x2022, L'\0'}; /* • */
 const wchar_t xmark[] = {0x00d7, L'\0'}; /* × */
 /*
-const char hbar[] = "абвгдежзкик"; 
+const char hbar[] = "абвгдежзкик";
 */
 
 const char hbar[] = "abcdefghklm"; /* горизонтальный ряд */
-struct cell{
-    int x;
-    int y;
-};
 
 static struct map gmap;
 void curses_init();
