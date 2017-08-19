@@ -112,7 +112,7 @@ void upd_user_field(int x, int y, int status)
     index = findship(x,y);
     /* уменьшаем длину корабля */
     gmap.my_ships[index].length = gmap.my_ships[index].length >> 1;
-    gmap.my_ships[index].position[x][y] = status; 
+    gmap.my_ships[index].position[x][y] = status;
 
     switch (status) {
         case DROW:
@@ -127,7 +127,7 @@ void penemyinfo(int status)
 {
     switch (status) {
         case MISS:
-            mvwprintw(stdscr, MSGPOS, 0, "Противкник промазал");
+            mvwprintw(stdscr, MSGPOS, 0, "Противник промазал");
             break;
         case HIT:
             mvwprintw(stdscr, MSGPOS, 0, "Противник повредил корабль");
